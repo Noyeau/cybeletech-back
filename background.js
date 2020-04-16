@@ -2,27 +2,31 @@ const https = require('https');
 const environment = require('./environement');
 const bdd = require('./bdd')
 
-
-const valuesVoulus=[
-    { label:"irradiance globale", code :"global_rad:W", unite:"W/m²"},
-    { label:"point de rosée à 2m", code :"dew_point_2m:C", unite:"°C"},
-    { label:"température à 2m", code :"t_2m:C", unite:"°C"},
-    { label:"humidité relative à 2m", code :"relative_humidity_2m:p", unite:"%"},
+/**
+ * Liste des paramètres demandé à l'API Meteomatics
+ */
+const valuesVoulus = [
+    { label: "irradiance globale", code: "global_rad:W", unite: "W/m²" },
+    { label: "point de rosée à 2m", code: "dew_point_2m:C", unite: "°C" },
+    { label: "température à 2m", code: "t_2m:C", unite: "°C" },
+    { label: "humidité relative à 2m", code: "relative_humidity_2m:p", unite: "%" },
 ]
 
-exports.valuesType=valuesVoulus;
-
-//dew_point_2m:C	dew point temperature at 2m height [C]
-//global_rad: W	rayonnement global [W]
 
 /**
  * Mise a jours des données de la bdd via l'API Meteomatics
  */
- exports.syncData = async () => {
+async function syncData (){
     return new Promise((resolve, reject) => {
-        let time = new Date().toISOString()+"P7D:P1D";
-        let parameters = valuesVoulus.map((x)=>x.code).join(',');
-        let location="france:100x100";
+        let now = new Date()
+        now.setUTCHours(12)
+        now.setUTCMinutes(0)
+        now.setUTCSeconds(0)
+        now.setUTCMilliseconds(0)
+        let time = now.toISOString() + "P7D:P1D";
+        console.log(time)
+        let parameters = valuesVoulus.map((x) => x.code).join(',');
+        let location = "france:100x100";
         let url = `https://${environment.apiMeteomatics.user}:${environment.apiMeteomatics.pwd}@api.meteomatics.com/${time}/${parameters}/${location}/json`;
 
         https.get(url, (resp) => {
@@ -47,8 +51,8 @@ exports.valuesType=valuesVoulus;
                     await bdd.updateData(el)
                 })
 
-                bdd.meteoModel.find((err,result)=>{
-                    if(err){
+                bdd.meteoModel.find((err, result) => {
+                    if (err) {
                         reject(err)
                         return
                     }
@@ -114,3 +118,38 @@ function calculData(data) {
     }
     return []
 }
+
+
+
+/**
+ *  lancement de l'update de la BDD périodique
+ *  Verifie toutes les 10 minutes si la dernière MAJ date de moins de "nbrHeures"
+ */
+function periodeSync() {
+    let nbrHeures = 3
+    nbrHeures = nbrHeures * 1000 * 60 * 60
+
+    setInterval(async () => {
+        console.log("verify time")
+
+        let lastUpdate = new Date(await bdd.getSetting('lastUpdate'))
+        console.log("-> lastUpdate" , lastUpdate)
+        
+        console.log("-> nbrHeures " , nbrHeures)
+        console.log("-> lastUpdate.getTime()" , lastUpdate.getTime())
+        console.log("-> new Date().getTime()" , new Date().getTime())
+        console.log("-> calcul" , (lastUpdate.getTime() + nbrHeures) +' >= '+new Date().getTime())
+        console.log("-> rep" , (lastUpdate.getTime() + nbrHeures <= new Date().getTime()))
+
+
+        if(lastUpdate.getTime() + nbrHeures <= new Date().getTime()){
+            syncData();
+        }
+    }, 1000 *60 *10)
+}
+
+
+
+exports.valuesType = valuesVoulus;
+exports.syncData = syncData;
+exports.periodeSync = periodeSync;

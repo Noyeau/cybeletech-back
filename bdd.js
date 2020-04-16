@@ -121,14 +121,14 @@ exports.meteoModel = meteoModel
 
 // })
 
-exports.getSetting = (type = "dateGenerated") => {
+exports.getSetting = async (type = "lastUpdate") => {
     return new Promise((resolve, reject) => {
-        settingModel.find({ type: type }, (err, res) => {
+        settingModel.findOne({ type: type }, (err, res) => {
             if (err) {
                 reject(err)
                 return
             }
-            resolve(res)
+            resolve(res.value)
             console.log('res', res)
         })
     })
