@@ -6,10 +6,10 @@ const bdd = require('./bdd')
  * Liste des paramètres demandé à l'API Meteomatics
  */
 const valuesVoulus = [
-    { label: "irradiance globale", code: "global_rad:W", unite: "W/m²" },
-    { label: "point de rosée à 2m", code: "dew_point_2m:C", unite: "°C" },
-    { label: "température à 2m", code: "t_2m:C", unite: "°C" },
-    { label: "humidité relative à 2m", code: "relative_humidity_2m:p", unite: "%" },
+    { label: "Irradiance globale", code: "global_rad:W", unite: "W/m²" },
+    { label: "Point de rosée à 2m", code: "dew_point_2m:C", unite: "°C" },
+    { label: "Température à 2m", code: "t_2m:C", unite: "°C" },
+    { label: "Humidité relative à 2m", code: "relative_humidity_2m:p", unite: "%" },
 ]
 
 
